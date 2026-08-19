@@ -1,41 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title></title>
-	<meta charset="utf-8" />
-    <script src="Scripts/jquery-1.9.1.min.js"></script>
-    <link href="Content/bootstrap.min.css" rel="stylesheet" />
-    <script src="Scripts/isRockFx.js"></script>
-    <script>
-        $(function () {
-            $('#ButtonCal').click(
-                function () {
-                    //ok
-                    var para = { 'height': $('#txbHeight').val(), 'weight': $('#txbWeight').val() };
-                    //conmeo
-                    ExecuteAPI('Example', 'BMI', para,
-			//呼叫WebAPI成功時運行的Call Back Function
-                        function (result) {
-                            alert(result.Data);
-                        }
-                        );
-                }
-                );
-        });
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
+
 <body>
-    <div class="row" style="margin:10px">
-        <div class="col-md-12">
-            <div class="form-group">
-                Ten:
-                <input id="txbHeight" class="form-control" placeholder="Truong Cong Hiep" />
-                Lop:
-                <input id="txbWeight" class="form-control" placeholder="DS66B" />
-                <br />
-                <button class="btn btn-primary" id="ButtonCal">Toi thich nuoi mot con meo, no ten la Meo</button>
-            </div>
-        </div>
-    </div>
+    <header>
+        <h1>My first post</h1>
+    </header>
+    <nav>
+        <a href = '#' >Home</a> 
+        <a href = '#'>About</a> 
+        <a href = '#'>Contact</a> 
+    </nav>
+
+    <section>
+        <h2>Muc luc</h2>
+        <ul>
+            <li><a href = '#Phan1'>Gioi thieu</a></li>
+            <li><a href = '#Phan2'>So thich</a></li>
+        </ul>
+    </section>
+
+    <section id = 'Phan1'>
+        <h2>Gioi thieu ban than</h2>
+        <p>Ten: Truong Cong Hiep</p>
+        <p>Tuoi: 20</p>
+        <a href = 'https://www.w3schools.com'>Link W3Schools</a>
+        <br>
+
+        <img src = "https://inkythuatso.com/uploads/thumbnails/800/2022/05/hinh-nen-meo-ngao-29-12-10-25-30.jpg" alt ="anh bat ky" style="width:100px;height:auto">
+        <br>
+    </section>
+
+    <section id = 'Phan2'>
+        <h2>So thich ca nhan</h2>
+        <ul>
+        <li>keo</li>
+        <li>banh</li>
+        <li>hoa qua</li>
+        </ul>
+    </section>
+    
+    <footer>
+        <p>Copyright 2026</p>
+    </footer>
+
 </body>
 </html>
