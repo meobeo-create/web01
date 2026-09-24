@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Dự đoán giá nhà</h2>
+    
+    <form id="predictionForm">
+        <div class="form-group">
+            <label for="area">Diện tích (m²): <span style="color:red">*</span></label>
+            <input type="number" id="area" step="any" required placeholder="Nhập diện tích">
+        </div>
+
+        <div class="form-group">
+            <label for="bedrooms">Số phòng ngủ: <span style="color:red">*</span></label>
+            <input type="number" id="bedrooms" required placeholder="Nhập số phòng ngủ">
+        </div>
+
+        <div class="form-group">
+            <label for="location">Địa điểm (Optional):</label>
+            <select id="location">
+                <option value="">-- Chọn địa điểm (Không bắt buộc) --</option>
+                <option value="hanoi">Hà Nội</option>
+                <option value="hcmc">TP. Hồ Chí Minh</option>
+                <option value="other">Khác</option>
+            </select>
+        </div>
+
+        <button type="submit">Dự đoán</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+    document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // 1. Lấy giá trị từ các ô input
+        const area = document.getElementById('area').value;
+        const bedrooms = document.getElementById('bedrooms').value;
+        const location = document.getElementById('location').value;
+
+        // 2. Sử dụng Relative URL (không truyền http://127.0.0.1:8000)
+        let url = `/predict?area=${area}&bedrooms=${bedrooms}`;
+        if (location) {
+            url += `&location=${encodeURIComponent(location)}`;
+        }
+
+        const resultDiv = document.getElementById('result');
+
+        try {
+            // Gọi API bằng relative URL
+            const response = await fetch(url);
+            
+            // Bắt lỗi nếu HTTP Status Code không phải 200 (OK)
+            if (!response.ok) {
+                throw new Error(`Lỗi từ máy chủ: ${response.status}`);
+            }
+
+            // 3. Chờ và parse dữ liệu JSON từ API
+            const data = await response.json(); 
+            
+            // Xử lý chuỗi giá tiền để định dạng có dấu phân cách hàng nghìn
+            let displayPrice = data;
+            
+            // Nếu API trả về chuỗi "Prediction price: 1250.00", ta tách lấy số để định dạng
+            if (typeof data === 'string' && data.includes(':')) {
+                const parts = data.split(':');
+                const priceNum = parseFloat(parts[1].trim());
+                if (!isNaN(priceNum)) {
+                    // 4. Hiển thị dạng định dạng hàng nghìn
+                    displayPrice = `${parts[0]}: ${priceNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                }
+            }
+
+            // Hiển thị kết quả thành công lên giao diện
+            resultDiv.style.backgroundColor = '#d4edda';
+            resultDiv.style.color = '#155724';
+            resultDiv.innerText = displayPrice;
+
+        } catch (error) {
+            // 5. Xử lý khi request thất bại (Tránh crash ứng dụng)
+            console.error('Lỗi khi gọi API:', error);
+            resultDiv.style.backgroundColor = '#f8d7da';
+            resultDiv.style.color = '#721c24';
+            resultDiv.innerText = `Không thể kết nối hoặc lấy dữ liệu: ${error.message}`;
+        }
+    });
+</script>
+</body>
+</html>
