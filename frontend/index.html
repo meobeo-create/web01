@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab 2: CORS + Fetch</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; }
+        .error { color: red; margin-top: 5px; }
+        .form-group { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Thêm Hero Mới</h2>
+    <form id="heroForm">
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label>Secret Name:</label>
+            <input type="text" id="secret_name" required>
+        </div>
+        <div class="form-group">
+            <label>Age:</label>
+            <input type="number" id="age">
+        </div>
+        <div class="form-group">
+            <label>Team:</label>
+            <select id="team_id">
+                <option value="">-- Chọn Team --</option>
+            </select>
+        </div>
+        <button type="submit">Thêm Hero</button>
+        <div id="errorMsg" class="error"></div>
+    </form>
+
+    <hr>
+
+    <h2>Lọc Hero theo Team</h2>
+    <select id="filterTeam" onchange="loadHeroesByTeam()">
+        <option value="">-- Tất cả Teams --</option>
+    </select>
+
+    <h2>Danh Sách Heroes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Secret Name</th>
+                <th>Age</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="heroesTable"></tbody>
+    </table>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/api/v1";
+
+        // 1. Tải danh sách Teams vào <select>
+        async function loadTeams() {
+            try {
+                const res = await fetch(`${API_URL}/teams`);
+                const teams = await res.json();
+                
+                const teamSelect = document.getElementById("team_id");
+                const filterSelect = document.getElementById("filterTeam");
+                
+                teams.forEach(team => {
+                    const opt1 = document.createElement("option");
+                    opt1.value = team.id;
+                    opt1.textContent = team.name;
+                    teamSelect.appendChild(opt1);
+
+                    const opt2 = document.createElement("option");
+                    opt2.value = team.id;
+                    opt2.textContent = team.name;
+                    filterSelect.appendChild(opt2);
+                });
+            } catch (err) {
+                console.error("Lỗi khi tải teams:", err);
+            }
+        }
+
+        // 2. Render danh sách Heroes bằng textContent
+        function renderHeroes(heroes) {
+            const tbody = document.getElementById("heroesTable");
+            tbody.innerHTML = "";
+
+            heroes.forEach(hero => {
+                const tr = document.createElement("tr");
+
+                const tdId = document.createElement("td");
+                tdId.textContent = hero.id;
+
+                const tdName = document.createElement("td");
+                tdName.textContent = hero.name;
+
+                const tdSecret = document.createElement("td");
+                tdSecret.textContent = hero.secret_name;
+
+                const tdAge = document.createElement("td");
+                tdAge.textContent = hero.age ?? "N/A";
+
+                const tdStatus = document.createElement("td");
+                tdStatus.textContent = hero.status ?? "N/A";
+
+                tr.appendChild(tdId);
+                tr.appendChild(tdName);
+                tr.appendChild(tdSecret);
+                tr.appendChild(tdAge);
+                tr.appendChild(tdStatus);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. GET /heroes
+        async function loadHeroes() {
+            try {
+                const res = await fetch(`${API_URL}/heroes`);
+                const heroes = await res.json();
+                renderHeroes(heroes);
+            } catch (err) {
+                console.error("Lỗi khi tải heroes:", err);
+            }
+        }
+
+        // 4. GET /teams/{id}/heroes (Extension)
+        async function loadHeroesByTeam() {
+            const teamId = document.getElementById("filterTeam").value;
+            if (!teamId) {
+                loadHeroes();
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/teams/${teamId}/heroes`);
+                const heroes = await res.json();
+                renderHeroes(heroes);
+            } catch (err) {
+                console.error("Lỗi khi lọc heroes theo team:", err);
+            }
+        }
+
+        // 5. POST a hero & Bắt lỗi 422 Validation
+        document.getElementById("heroForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errorMsg = document.getElementById("errorMsg");
+            errorMsg.textContent = "";
+
+            const payload = {
+                name: document.getElementById("name").value,
+                secret_name: document.getElementById("secret_name").value,
+                age: document.getElementById("age").value ? parseInt(document.getElementById("age").value) : null,
+                team_id: document.getElementById("team_id").value ? parseInt(document.getElementById("team_id").value) : null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/heroes`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.status === 201) {
+                    document.getElementById("heroForm").reset();
+                    loadHeroes(); // Refresh khi tạo thành công (201)
+                } else if (res.status === 422) {
+                    const errorData = await res.json();
+                    // Hiển thị lỗi validation (ví dụ thử nhập age = -5)
+                    errorMsg.textContent = "Lỗi dữ liệu (422): " + errorData.detail.map(d => `${d.loc.join('.')}: ${d.msg}`).join(", ");
+                } else {
+                    errorMsg.textContent = "Lỗi server: " + res.statusText;
+                }
+            } catch (err) {
+                errorMsg.textContent = "Lỗi kết nối / CORS Error!";
+            }
+        });
+
+        // Tải dữ liệu ban đầu
+        loadTeams();
+        loadHeroes();
+    </script>
+</body>
+</html>
